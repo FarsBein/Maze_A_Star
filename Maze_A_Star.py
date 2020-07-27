@@ -26,7 +26,7 @@ class Node:
     def get_pixel_pos(self):
         return self.x,self.y
     def draw(self,screen):
-        pygame.draw.rect(screen,self.color,(self.x+self.size/4,self.y+self.size/4,self.size/2,self.size/2))
+        pygame.draw.rect(screen,self.color,(self.x+2,self.y+2,self.size-4,self.size-4))
     def is_up(self):
         return self.up
     def is_down(self):
@@ -38,13 +38,13 @@ class Node:
     def make_start(self):
         self.color = GREEN
     def make_end(self):
-        self.color = BLUE
+        self.color = RED
     def make_down(self,condition):
         self.down = condition
     def make_right(self,condition):
         self.right = condition
     def make_player(self):
-        self.color = RED
+        self.color = BLUE
     def make_end(self):
         self.color = BLUE
     def make_empty(self):
@@ -111,7 +111,6 @@ def gen_maze(grid):
     row = 0
     col = 0
     grid[3][0].make_right(False)
-    # for idasd in range(5):
     while len(visited) < len_grid**2:
         
         for event in pygame.event.get():
@@ -136,6 +135,8 @@ def gen_maze(grid):
                     grid[row][col].make_down(False)
                 visited.append(grid[row][col+x])
         row,col = visited[-1].get_pos() 
+
+
         
 
 def main(screen,width):
@@ -148,6 +149,7 @@ def main(screen,width):
     pygame.display.update()
     
     made_grid = False
+
 
     
     while gameRunning:
@@ -182,6 +184,8 @@ def main(screen,width):
             gen_maze(grid)
             grid[0][0].make_start()
             grid[ROWS-1][ROWS-1].make_end()
+            grid[0][0].draw(screen)
+            grid[ROWS-1][ROWS-1].draw(screen)
             draw_grid(screen,grid,size)
             pygame.display.update()
             made_grid = True
