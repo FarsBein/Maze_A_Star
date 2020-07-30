@@ -1,5 +1,6 @@
 import pygame
 import random
+from queue import PriorityQueue
 
 pygame.init()
 WIDTH = 800
@@ -10,9 +11,12 @@ BLACK = (0, 0, 0)
 WHITE = (250, 250, 250)
 RED = (255,0,0)
 BLUE = (0,0,255)
+LIGHT_BLUE = (173, 216, 230)
 GREEN =(0,255,0)
+GRAY = (220,220,220)
+PINK = (255,182,193)
 class Node:
-    def __init__(self,row,col,size):
+    def __init__(self,row,col,size,total_row):
         self.row   = row
         self.col   = col
         self.size = size
@@ -21,18 +25,16 @@ class Node:
         self.color = WHITE
         self.down  = True
         self.right = True
+        self.neighbors = [] 
+        self.total_row = total_row
     def get_pos(self):
         return self.row,self.col
     def get_pixel_pos(self):
         return self.x,self.y
     def draw(self,screen):
-        pygame.draw.rect(screen,self.color,(self.x+2,self.y+2,self.size-4,self.size-4))
-    def is_up(self):
-        return self.up
+        pygame.draw.rect(screen,self.color,(self.x+4,self.y+4,self.size-6,self.size-6))
     def is_down(self):
         return self.down
-    def is_left(self):
-        return self.left
     def is_right(self):
         return self.right
     def make_start(self):
@@ -44,11 +46,88 @@ class Node:
     def make_right(self,condition):
         self.right = condition
     def make_player(self):
-        self.color = BLUE
-    def make_end(self):
-        self.color = BLUE
+        self.color = GRAY
     def make_empty(self):
         self.color = WHITE
+    def make_open(self):
+        self.color = LIGHT_BLUE
+    def make_closed(self):
+        self.color = BLUE
+    def make_path(self):
+        self.color = GREEN
+    def update_neighbors(self, grid):
+        self.neighbors=[]
+        if self.row > 0 and not grid[self.row-1][self.col].is_right():
+            self.neighbors.append(grid[self.row-1][self.col])
+        if self.col > 0 and not grid[self.row][self.col-1].is_down():
+            self.neighbors.append(grid[self.row][self.col-1])
+        if self.row < self.total_row-1 and not grid[self.row][self.col].is_right():
+            self.neighbors.append(grid[self.row+1][self.col])
+        if self.col < self.total_row-1 and not grid[self.row][self.col].is_down():
+            self.neighbors.append(grid[self.row][self.col+1])
+    def __it__(self,other):
+        return False
+    
+
+def draw_node(screen,grid):
+    for row in grid:
+        for node in row:
+            node.draw(screen)
+    pygame.display.update()
+def h(pos_1,pos_2):
+    y1,x1 = pos_1
+    y2,x2 = pos_2
+    return abs(x1-x2) + abs(y1-y2)
+
+# def h_solver(draw,grid,start,end):
+#     old_option=[]
+#     current_path=[]
+def draw_final_line(draw, came_from, current):
+    while current in came_from:
+        current = came_from[current]
+        current.make_path()
+        draw()
+
+def a_star(draw,grid,start,end):
+    print("a_Star starts")
+    count = 0
+    open_set = PriorityQueue()
+    open_set.put((0,count, start))
+    came_from = {}
+    g_score = {node:float("inf") for row in grid for node in row}
+    g_score[start]=0
+    f_score = {node:float("inf") for row in grid for node in row}
+    f_score[start]=h(start.get_pos(),end.get_pos())
+
+    open_set_hash = {start}
+    
+    while not open_set.empty():
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                break
+        current = open_set.get()[2] #current node
+        open_set_hash.remove(current)
+        if current == end:
+            draw_final_line(draw,came_from, current)
+            return True
+        for neighbor in current.neighbors:
+            # print(not neighbor.is_right(),not neighbor.is_down())
+            
+            temp_g_score = g_score[current]+1            
+            if temp_g_score < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor]   = temp_g_score
+                f_score[neighbor] = temp_g_score + h(neighbor.get_pos(),end.get_pos())
+                if neighbor not in open_set_hash:
+                    count+=1
+                    open_set.put((f_score[neighbor],count,neighbor))
+                    open_set_hash.add(neighbor)
+                    neighbor.make_open()
+        draw()        
+
+    print("a_Star ends")
         
 def make_grid(rows,width):
     size=width//rows
@@ -56,8 +135,8 @@ def make_grid(rows,width):
     for i in range(rows):
         grid.append([])
         for j in range(rows):
-            node = Node(i,j,size)
-            grid[-1].append(node)
+            node = Node(i,j,size,rows)
+            grid[i].append(node)
     return grid
 
 def draw_grid(screen,grid,size):
@@ -70,9 +149,9 @@ def draw_grid(screen,grid,size):
             # if node.is_up():
             #     pygame.draw.line(screen,BLACK,[row,col],[row+size,col],1)
             if node.is_down():
-                pygame.draw.line(screen,BLACK,[row,col+size],[row+size,col+size],1)
+                pygame.draw.line(screen,BLACK,[row,col+size],[row+size,col+size],3)
             if node.is_right():
-                pygame.draw.line(screen,BLACK,[row+size,col],[row+size,col+size],1)
+                pygame.draw.line(screen,BLACK,[row+size,col],[row+size,col+size],3)
     pygame.display.update()
 
 def random_direction(row,col,len_grid,grid,visited):
@@ -115,7 +194,6 @@ def gen_maze(grid):
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
                 break
                 
         y,x = random_direction(row,col,len_grid,grid,visited)
@@ -150,12 +228,12 @@ def main(screen,width):
     
     made_grid = False
 
-
+    start = grid[0][0]
+    end = grid[ROWS-1][ROWS-1]
     
     while gameRunning:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()       
                 gameRunning = False
             if pygame.mouse.get_pressed()[0]:
                 row,col = pygame.mouse.get_pos()
@@ -177,18 +255,31 @@ def main(screen,width):
                     grid[row][col].make_empty()
                     grid[row][col].draw(screen)
                     pygame.display.update()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and made_grid:
+                    # grid[5][5].make_open()
+                    # grid[4][5].make_open()
+                    # draw_node(screen,grid)
+                    # print(grid[5][5],"is_down:",grid[5][5].is_down(),"is_right:",grid[5][5].is_right())
+                    # print(grid[4][5],"is_down:",grid[4][5].is_down(),"is_right:",grid[4][5].is_right())
+                    for row in grid:
+                        for node in row:
+                            node.update_neighbors(grid)
+                    a_star(lambda: draw_node(screen,grid),grid,start,end)
             if event.type == pygame.K_r:
                 gameRunning = False
                 main(screen,width)
         if not made_grid:
             gen_maze(grid)
-            grid[0][0].make_start()
-            grid[ROWS-1][ROWS-1].make_end()
-            grid[0][0].draw(screen)
-            grid[ROWS-1][ROWS-1].draw(screen)
+            start.make_start()
+            end.make_end()
+            start.draw(screen)
+            end.draw(screen)
             draw_grid(screen,grid,size)
             pygame.display.update()
             made_grid = True
+    pygame.quit()
+    
                 
 main(SCREEN,WIDTH)
             
