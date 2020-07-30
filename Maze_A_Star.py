@@ -5,7 +5,7 @@ from queue import PriorityQueue
 pygame.init()
 WIDTH = 800
 SCREEN = pygame.display.set_mode((WIDTH,WIDTH))
-pygame.display.set_caption("Learing pygame")
+pygame.display.set_caption("A* Maze generator")
 
 BLACK = (0, 0, 0)
 WHITE = (250, 250, 250)
@@ -79,9 +79,6 @@ def h(pos_1,pos_2):
     y2,x2 = pos_2
     return abs(x1-x2) + abs(y1-y2)
 
-# def h_solver(draw,grid,start,end):
-#     old_option=[]
-#     current_path=[]
 def draw_final_line(draw, came_from, current):
     while current in came_from:
         current = came_from[current]
@@ -89,7 +86,6 @@ def draw_final_line(draw, came_from, current):
         draw()
 
 def a_star(draw,grid,start,end):
-    print("a_Star starts")
     count = 0
     open_set = PriorityQueue()
     open_set.put((0,count, start))
@@ -113,8 +109,6 @@ def a_star(draw,grid,start,end):
             draw_final_line(draw,came_from, current)
             return True
         for neighbor in current.neighbors:
-            # print(not neighbor.is_right(),not neighbor.is_down())
-            
             temp_g_score = g_score[current]+1            
             if temp_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
@@ -127,8 +121,6 @@ def a_star(draw,grid,start,end):
                     neighbor.make_open()
         draw()        
 
-    print("a_Star ends")
-        
 def make_grid(rows,width):
     size=width//rows
     grid=[]
@@ -144,10 +136,6 @@ def draw_grid(screen,grid,size):
         for j in range(len(grid)):
             node = grid[i][j]
             row,col = node.get_pixel_pos()
-            # if node.is_left():
-            #     pygame.draw.line(screen,BLACK,[row,col],[row,col+size],1)
-            # if node.is_up():
-            #     pygame.draw.line(screen,BLACK,[row,col],[row+size,col],1)
             if node.is_down():
                 pygame.draw.line(screen,BLACK,[row,col+size],[row+size,col+size],3)
             if node.is_right():
@@ -157,7 +145,7 @@ def draw_grid(screen,grid,size):
 def random_direction(row,col,len_grid,grid,visited):
     x=0
     y=0
-    possible_directions = [] # 0 is up, 1 is right, 2 is down, 3 is left
+    possible_directions = []
     
     if row - 1 >= 0 and grid[row-1][col] not in visited:
         possible_directions.append(0)
@@ -257,11 +245,6 @@ def main(screen,width):
                     pygame.display.update()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and made_grid:
-                    # grid[5][5].make_open()
-                    # grid[4][5].make_open()
-                    # draw_node(screen,grid)
-                    # print(grid[5][5],"is_down:",grid[5][5].is_down(),"is_right:",grid[5][5].is_right())
-                    # print(grid[4][5],"is_down:",grid[4][5].is_down(),"is_right:",grid[4][5].is_right())
                     for row in grid:
                         for node in row:
                             node.update_neighbors(grid)
