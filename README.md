@@ -2,7 +2,7 @@
 A pygame program that generators random mazes using a backtrack algorithm. It also alows users to solve the maze using the well known A* algorithm
 
 ### Why?
-I wanted to implement some data structures that I recently learned. In this project, I used Stack in backtrack algorithm and used Queues in A* algorithm
+I wanted to implement some of the Data structures that I recently learned. In this project, I used Stack in backtrack algorithm and used Queues in A* algorithm
 
 ### How to play
 On terminal type "python Maze_A_Star.py" and a maze will be automatically generated:
