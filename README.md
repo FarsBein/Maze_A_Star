@@ -4,7 +4,7 @@ A pygame program that generators random mazes using a backtrack algorithm. It al
 ### Why?
 I wanted to implement some data structures that I recently learned. In this project, I used Stack in backtrack algorithm and used Queues in A* algorithm
 
-### Run Maze_A_Star
+### How to play
 On terminal type "python Maze_A_Star.py" and a maze will be automatically generated:
 
 <img src='preview%20images/image_1.JPG' height="400" width="400"/>
